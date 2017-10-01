@@ -28,7 +28,8 @@ char get_next(){
 }
 
 token lexical_error(){
-  cerr << "Lexical error.  Restarting scanner" << endl;;
+  cerr << "Lexical error.  Restarting scanner" << endl;
+  //get_next();
   return scan();
 }
 
