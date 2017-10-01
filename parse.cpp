@@ -12,16 +12,18 @@ using namespace std;
 #include "scan.h"
 
 
-const char* names[] = {"read", "write", "id", "literal", "gets",
+const string names[] = {"read", "write", "id", "literal", "gets",
                        "add", "sub", "mul", "div", "lparen", "rparen", "eof",
                         "eql", "neql", "less", "more", "leql", "meql",
                         "if", "fi", "do", "od", "check"};
 
 static token input_token;
 
-void error () {
+void error (token unexpected_token) {
     cout << "syntax error" << endl;
-    exit (1);
+    string e = "Syntax error: unexpected " + names[unexpected_token];
+    throw e;
+    //exit (1);
 }
 
 void match (token expected) {
@@ -34,8 +36,9 @@ void match (token expected) {
         //printf ("\n");
         cout << endl;
         input_token = scan ();
+    }else{
+      throw "Syntax error: received "+ names[input_token] +" when expecting " + names[expected];
     }
-    else error ();
 }
 
 void program ();
@@ -54,20 +57,24 @@ void rln_op ();
 void expr_tail ();
 
 void program () {
-    switch (input_token) {
-        case t_id:
-        case t_read:
-        case t_write:
-        case t_if:
-        case t_do:
-        case t_check:
-        case t_eof:
-            //printf ("predict program --> stmt_list eof\n");
-            cout << "predict program --> stmt_list eof" << endl;
-            stmt_list ();
-            match (t_eof);
-            break;
-        default: error ();
+    try{
+      switch (input_token) {
+          case t_id:
+          case t_read:
+          case t_write:
+          case t_if:
+          case t_do:
+          case t_check:
+          case t_eof:
+              //printf ("predict program --> stmt_list eof\n");
+              cout << "predict program --> stmt_list eof" << endl;
+              stmt_list ();
+              match (t_eof);
+              break;
+          default: error (input_token);
+      }
+    }catch(const string e){
+      cout << e << endl;
     }
 }
 
@@ -89,11 +96,12 @@ void stmt_list () {
             //printf ("predict stmt_list --> epsilon\n");
             cout << "predict stmt_list --> epsilon" << endl;
             break;          /*  epsilon production */
-        default: error ();
+        default: error (input_token);
     }
 }
 
 void stmt () {
+  try{
     switch (input_token) {
         case t_id:
             cout << "predict stmt --> id gets rln" << endl;
@@ -124,16 +132,34 @@ void stmt () {
             stmt_list ();
             match (t_od);
             break;
-        case t_check: 
+        case t_check:
             cout << "predict stmt --> check rln" <<endl;
             match (t_check);
             rln ();
             break;
-        default: error ();
+        default: error (input_token);
     }
+  }catch(const string e){
+    cout << e << endl;
+    while(1){
+      if(input_token==t_eof or
+        input_token==t_id or
+        input_token==t_read or
+        input_token==t_write or
+        input_token==t_if or
+        input_token==t_do or
+        input_token==t_check){
+        stmt();
+        return;
+      }else{
+        input_token = scan();
+      }
+    }
+  }
 }
 
 void expr () {
+  try{
     switch (input_token) {
         case t_id:
         case t_literal:
@@ -142,8 +168,39 @@ void expr () {
             term ();
             term_tail ();
             break;
-        default: error ();
+        default: error (input_token);
     }
+  }catch(const string e){
+    cout << e << endl;
+    while(1){
+      if(input_token==t_lparen or
+        input_token==t_id or
+        input_token==t_literal){
+          expr();
+          return;
+      }else if(
+        input_token==t_rparen or
+        input_token==t_read or
+        input_token==t_write or
+        input_token==t_if or
+        input_token==t_do or
+        input_token==t_check or
+        input_token==t_fi or
+        input_token==t_od or
+        input_token==t_eof or
+        input_token==t_eql or
+        input_token==t_neql or
+        input_token==t_less or
+        input_token==t_more or
+        input_token==t_leql or
+        input_token==t_meql
+      ){
+        return;
+      }else{
+        input_token = scan();
+      }
+    }
+  }
 }
 
 void expr_tail () {
@@ -170,12 +227,13 @@ void expr_tail () {
         case t_eof:
             cout << "predict expr_tail --> epsilon" << endl;
             break;          /*  epsilon production */
-        default: error ();
+        default: error (input_token);
     }
 
 }
 
 void rln () {
+  try{
     switch (input_token) {
         case t_id:
         case t_literal:
@@ -184,8 +242,33 @@ void rln () {
             expr ();
             expr_tail ();
             break;
-        default: error ();
+        default: error (input_token);
     }
+  }catch(const string e){
+    cout << e << endl;
+    while(1){
+      if(input_token==t_lparen or
+        input_token==t_id or
+        input_token==t_literal){
+          rln();
+          return;
+      }else if(
+        input_token==t_rparen or
+        input_token==t_read or
+        input_token==t_write or
+        input_token==t_if or
+        input_token==t_do or
+        input_token==t_check or
+        input_token==t_fi or
+        input_token==t_od or
+        input_token==t_eof
+      ){
+        return;
+      }else{
+        input_token = scan();
+      }
+    }
+  }
 }
 
 void term_tail () {
@@ -215,7 +298,7 @@ void term_tail () {
         case t_eof:
             cout << "predict term_tail --> epsilon" << endl;
             break;          /*  epsilon production */
-        default: error ();
+        default: error (input_token);
     }
 }
 
@@ -228,7 +311,7 @@ void term () {
             factor ();
             factor_tail ();
             break;
-        default: error ();
+        default: error (input_token);
     }
 }
 
@@ -243,7 +326,7 @@ void factor_tail () {
             break;
         case t_add:
         case t_sub:
-         case t_eql:
+        case t_eql:
         case t_neql:
         case t_less:
         case t_more:
@@ -261,7 +344,7 @@ void factor_tail () {
         case t_eof:
             cout << "predict factor_tail --> epsilon" << endl;
             break;          /*  epsilon production */
-        default: error ();
+        default: error (input_token);
     }
 }
 
@@ -281,7 +364,7 @@ void factor () {
             rln ();
             match (t_rparen);
             break;
-        default: error ();
+        default: error (input_token);
     }
 }
 
@@ -295,7 +378,7 @@ void add_op () {
             cout << "predict add_op --> sub" << endl;
             match (t_sub);
             break;
-        default: error ();
+        default: error (input_token);
     }
 }
 
@@ -309,7 +392,7 @@ void mul_op () {
             cout << "predict mul_op --> div\n" << endl;
             match (t_div);
             break;
-        default: error ();
+        default: error (input_token);
     }
 }
 
@@ -333,15 +416,14 @@ void rln_op () {
             break;
         case t_leql:
             cout << "predict rln_op --> leql" << endl;
-            match (t_leql);  
+            match (t_leql);
         case t_meql:
             cout << "predict rln_op --> meql" << endl;
             match (t_meql);
             break;
-        default: error ();
+        default: error (input_token);
     }
 }
-
 
 int main () {
     input_token = scan ();
