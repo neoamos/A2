@@ -11,6 +11,7 @@ using namespace std;
 
 #include "scan.h"
 
+
 const char* names[] = {"read", "write", "id", "literal", "gets",
                        "add", "sub", "mul", "div", "lparen", "rparen", "eof"};
 
