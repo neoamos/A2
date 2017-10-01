@@ -32,9 +32,9 @@ void error (token unexpected_token) {
 
 void match (token expected) {
     if (input_token == expected) {
-        //cout << "matched " << names[input_token];
+        cout << "matched " << names[input_token];
         if (input_token == t_id || input_token == t_literal)
-            cout << "\"" << token_image ;
+            cout << token_image ;
         cout << endl;
         input_token = scan ();
     }else{
@@ -444,6 +444,7 @@ void rln_op () {
         case t_leql:
             cout << "predict rln_op --> leql" << endl;
             match (t_leql);
+            break;
         case t_meql:
             cout << "predict rln_op --> meql" << endl;
             match (t_meql);
