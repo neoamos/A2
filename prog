@@ -1,7 +1,7 @@
    read n
    cp := 2
    do check n > 0
-       found := 0
+       found := 0)
        cf1 := 2
        cf1s := cf1 * cf1
        do check cf1s <= cp
@@ -17,9 +17,10 @@
            cf1 := cf1 + 1
            cf1s := cf1 * cf1
        od
-       if found == 0
+       if found  0
            write cp
            n := n - 1
        fi
        cp := cp + 1
    od
+

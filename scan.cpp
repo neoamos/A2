@@ -11,8 +11,30 @@ using namespace std;
 #include "scan.h"
 
 char token_image[100];
+int ln = 1;
+int col = 1;
+int next_ln = 1;
+int next_col = 1;
+
+char get_next(){
+  char n = cin.get();
+  if(n == '\n'){
+    next_ln += 1;
+    next_col = 1;
+  }else{
+    next_col += 1;
+  }
+  return n;
+}
+
+token lexical_error(){
+  cout << "Lexical error.  Restarting scanner" << endl;;
+  return scan();
+}
 
 token scan() {
+    col = next_col;
+    ln = next_ln;
     static int c = ' ';
         /* next available char; extra (int) width accommodates EOF */
     int i = 0;              /* index into token_image */
@@ -21,14 +43,14 @@ token scan() {
     while (isspace(c)) {
         //c = getchar();
         //cin >> c;
-        c = cin.get();
+        c = get_next();
     }
     if (cin.eof())
         return t_eof;
     if (isalpha(c)) {
         do {
             token_image[i++] = c;
-            c = cin.get();
+            c = get_next();
         } while (isalpha(c) || isdigit(c) || c == '_');
         token_image[i] = '\0';
         if (!strcmp(token_image, "read")) return t_read;
@@ -43,60 +65,56 @@ token scan() {
     else if (isdigit(c)) {
         do {
             token_image[i++] = c;
-            c = cin.get();
+            c = get_next();
         } while (isdigit(c));
         token_image[i] = '\0';
         return t_literal;
     } else switch (c) {
         case ':':
-            if ((c = cin.get()) != '=') {
+            if ((c = get_next()) != '=') {
                 //fprintf(stderr, "error\n");
-                cerr << "error" << endl;
-                exit(1);
+                return lexical_error();
             } else {
                 //c = getchar();
-                c = cin.get();
+                c = get_next();
                 return t_gets;
             }
             break;
-        case '+': c = cin.get(); return t_add;
-        case '-': c = cin.get(); return t_sub;
-        case '*': c = cin.get(); return t_mul;
-        case '/': c = cin.get(); return t_div;
-        case '(': c = cin.get(); return t_lparen;
-        case ')': c = cin.get(); return t_rparen;
+        case '+': c = get_next(); return t_add;
+        case '-': c = get_next(); return t_sub;
+        case '*': c = get_next(); return t_mul;
+        case '/': c = get_next(); return t_div;
+        case '(': c = get_next(); return t_lparen;
+        case ')': c = get_next(); return t_rparen;
 
-        case '=': 
-            if ((c = cin.get()) != '=') {
-                cerr << "error" << endl;
-                exit(1);
+        case '=':
+            if ((c = get_next()) != '=') {
+                return lexical_error();
             } else {
-                c = cin.get();
+                c = get_next();
                 return t_eql;
             }
             break;
-        case '<': 
-            if ((c = cin.get()) == '=') {
-                c = cin.get();
+        case '<':
+            if ((c = get_next()) == '=') {
+                c = get_next();
                 return t_leql;
             } else if (c == '>') {
-                c = cin.get();
-                return t_neql; 
+                c = get_next();
+                return t_neql;
             } else {
                 return t_less;
             }
             break;
         case '>':
-            if ((c = cin.get()) == '=') {
-                c = cin.get();
+            if ((c = get_next()) == '=') {
+                c = get_next();
                 return t_meql;
             } else {
                 return t_more;
             }
             break;
         default:
-            //printf("error\n");
-            cout << "error" << endl;
-            exit(1);
+            return lexical_error();
     }
 }

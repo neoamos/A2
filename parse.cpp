@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <string>
 using namespace std;
 
 #include "scan.h"
@@ -19,9 +20,20 @@ const string names[] = {"read", "write", "id", "literal", "gets",
 
 static token input_token;
 
+string token_string(token t){
+  string s = "\"" + names[t] + "\"";
+  if(t == t_id || t == t_literal){
+    s = s + " (" + token_image + ")";
+  }
+  return s;
+}
+
 void error (token unexpected_token) {
-    cout << "syntax error" << endl;
-    string e = "Syntax error: unexpected " + names[unexpected_token];
+    cout << "Syntax error: unexpected token " +token_string(unexpected_token) + " on line ";
+    cout << ln;
+    cout << ", col ";
+    cout << col << endl;
+    string e = "Syntax error: unexpected token " + token_string(unexpected_token);
     throw e;
     //exit (1);
 }
@@ -30,14 +42,18 @@ void match (token expected) {
     if (input_token == expected) {
         //printf ("matched %s", names[input_token]);
         cout << "matched " << names[input_token];
-        if (input_token == t_id || input_token == t_literal)
+        if (input_token == t_id  || input_token == t_literal)
             //printf (": %s", token_image);
             cout << ": " << token_image;
         //printf ("\n");
         cout << endl;
         input_token = scan ();
     }else{
-      throw "Syntax error: received "+ names[input_token] +" when expecting " + names[expected];
+      cout << "Syntax error: received an " +token_string(input_token) + " when expecting an " + token_string(expected) + " on line ";
+      cout << ln;
+      cout << ", col ";
+      cout << col << endl;
+      throw "Syntax error: received an "+ token_string(input_token) +" when expecting an " + token_string(expected);
     }
 }
 
@@ -74,7 +90,23 @@ void program () {
           default: error (input_token);
       }
     }catch(const string e){
-      cout << e << endl;
+      while(1){
+        if(input_token==t_id ||
+          input_token==t_read ||
+          input_token==t_write ||
+          input_token==t_if ||
+          input_token==t_do ||
+          input_token==t_check){
+          program();
+          return;
+        }else if(
+          input_token==t_eof
+          ){
+          return;
+        }else{
+          input_token = scan();
+        }
+      }
     }
 }
 
@@ -110,12 +142,12 @@ void stmt () {
             rln ();
             break;
         case t_read:
-            cout <<  "predict stmt --> read id" << endl;
+            //cout <<  "predict stmt --> read id" << endl;
             match (t_read);
             match (t_id);
             break;
         case t_write:
-            cout <<  "predict stmt --> write rln" << endl;
+            cout << "predict stmt --> write rln" << endl;
             match (t_write);
             rln ();
             break;
@@ -140,16 +172,20 @@ void stmt () {
         default: error (input_token);
     }
   }catch(const string e){
-    cout << e << endl;
     while(1){
-      if(input_token==t_eof or
-        input_token==t_id or
-        input_token==t_read or
-        input_token==t_write or
-        input_token==t_if or
-        input_token==t_do or
+      if(input_token==t_id ||
+        input_token==t_read ||
+        input_token==t_write ||
+        input_token==t_if ||
+        input_token==t_do ||
         input_token==t_check){
         stmt();
+        return;
+      }else if(
+        input_token==t_eof ||
+        input_token==t_od ||
+        input_token==t_fi
+        ){
         return;
       }else{
         input_token = scan();
@@ -171,28 +207,27 @@ void expr () {
         default: error (input_token);
     }
   }catch(const string e){
-    cout << e << endl;
     while(1){
-      if(input_token==t_lparen or
-        input_token==t_id or
+      if(input_token==t_lparen  ||
+        input_token==t_id ||
         input_token==t_literal){
           expr();
           return;
       }else if(
-        input_token==t_rparen or
-        input_token==t_read or
-        input_token==t_write or
-        input_token==t_if or
-        input_token==t_do or
-        input_token==t_check or
-        input_token==t_fi or
-        input_token==t_od or
-        input_token==t_eof or
-        input_token==t_eql or
-        input_token==t_neql or
-        input_token==t_less or
-        input_token==t_more or
-        input_token==t_leql or
+        input_token==t_rparen ||
+        input_token==t_read ||
+        input_token==t_write ||
+        input_token==t_if ||
+        input_token==t_do ||
+        input_token==t_check ||
+        input_token==t_fi ||
+        input_token==t_od ||
+        input_token==t_eof ||
+        input_token==t_eql ||
+        input_token==t_neql ||
+        input_token==t_less ||
+        input_token==t_more ||
+        input_token==t_leql ||
         input_token==t_meql
       ){
         return;
@@ -245,22 +280,21 @@ void rln () {
         default: error (input_token);
     }
   }catch(const string e){
-    cout << e << endl;
     while(1){
-      if(input_token==t_lparen or
-        input_token==t_id or
+      if(input_token==t_lparen ||
+        input_token==t_id ||
         input_token==t_literal){
           rln();
           return;
       }else if(
-        input_token==t_rparen or
-        input_token==t_read or
-        input_token==t_write or
-        input_token==t_if or
-        input_token==t_do or
-        input_token==t_check or
-        input_token==t_fi or
-        input_token==t_od or
+        input_token==t_rparen ||
+        input_token==t_read  ||
+        input_token==t_write  ||
+        input_token==t_if  ||
+        input_token==t_do  ||
+        input_token==t_check  ||
+        input_token==t_fi  ||
+        input_token==t_od  ||
         input_token==t_eof
       ){
         return;
@@ -417,6 +451,7 @@ void rln_op () {
         case t_leql:
             cout << "predict rln_op --> leql" << endl;
             match (t_leql);
+            break;
         case t_meql:
             cout << "predict rln_op --> meql" << endl;
             match (t_meql);
