@@ -31,10 +31,10 @@ bool assignId = false;
 string arg1;
 
 void error (token unexpected_token) {
-    cout << "Syntax error: unexpected token " +token_string(unexpected_token) + " on line ";
-    cout << ln;
-    cout << ", col ";
-    cout << col << endl;
+    cerr << "Syntax error: unexpected token " +token_string(unexpected_token) + " on line ";
+    cerr << ln;
+    cerr << ", col ";
+    cerr << col << endl;
     string e = "Syntax error: unexpected token " + token_string(unexpected_token);
     throw e;
     //exit (1);
@@ -50,10 +50,10 @@ void match (token expected) {
         //cout << endl;
         input_token = scan ();
     }else{
-      cout << "Syntax error: received an " +token_string(input_token) + " when expecting an " + token_string(expected) + " on line ";
-      cout << ln;
-      cout << ", col ";
-      cout << col << endl;
+      cerr << "Syntax error: received an " +token_string(input_token) + " when expecting an " + token_string(expected) + " on line ";
+      cerr << ln;
+      cerr << ", col ";
+      cerr << col << endl;
       throw "Syntax error: received an "+ token_string(input_token) +" when expecting an " + token_string(expected);
     }
 }

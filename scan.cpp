@@ -28,7 +28,7 @@ char get_next(){
 }
 
 token lexical_error(){
-  cout << "Lexical error.  Restarting scanner" << endl;;
+  cerr << "Lexical error.  Restarting scanner" << endl;;
   return scan();
 }
 
