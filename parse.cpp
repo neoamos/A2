@@ -13,7 +13,9 @@ using namespace std;
 
 
 const char* names[] = {"read", "write", "id", "literal", "gets",
-                       "add", "sub", "mul", "div", "lparen", "rparen", "eof"};
+                       "add", "sub", "mul", "div", "lparen", "rparen", "eof",
+                        "eql", "neql", "less", "more", "leql", "meql",
+                        "if", "fi", "do", "od", "check"};
 
 static token input_token;
 
@@ -47,11 +49,18 @@ void factor ();
 void add_op ();
 void mul_op ();
 
+void rln ();
+void rln_op ();
+void expr_tail ();
+
 void program () {
     switch (input_token) {
         case t_id:
         case t_read:
         case t_write:
+        case t_if:
+        case t_do:
+        case t_check:
         case t_eof:
             //printf ("predict program --> stmt_list eof\n");
             cout << "predict program --> stmt_list eof" << endl;
@@ -67,10 +76,15 @@ void stmt_list () {
         case t_id:
         case t_read:
         case t_write:
+        case t_if:
+        case t_do:
+        case t_check:
             cout << "predict stmt_list --> stmt stmt_list" << endl;
             stmt ();
             stmt_list ();
             break;
+        case t_fi:
+        case t_od:
         case t_eof:
             //printf ("predict stmt_list --> epsilon\n");
             cout << "predict stmt_list --> epsilon" << endl;
@@ -82,10 +96,10 @@ void stmt_list () {
 void stmt () {
     switch (input_token) {
         case t_id:
-            cout << "predict stmt --> id gets expr" << endl;
+            cout << "predict stmt --> id gets rln" << endl;
             match (t_id);
             match (t_gets);
-            expr ();
+            rln ();
             break;
         case t_read:
             cout <<  "predict stmt --> read id" << endl;
@@ -93,9 +107,27 @@ void stmt () {
             match (t_id);
             break;
         case t_write:
-            cout <<  "predict stmt --> write expr" << endl;
+            cout <<  "predict stmt --> write rln" << endl;
             match (t_write);
-            expr ();
+            rln ();
+            break;
+        case t_if:
+            cout << "predict stmt --> if rln stmt_list fi" <<endl;
+            match (t_if);
+            rln ();
+            stmt_list ();
+            match (t_fi);
+            break;
+        case t_do:
+            cout << "predict stmt --> do stmt_list od" <<endl;
+            match (t_do);
+            stmt_list ();
+            match (t_od);
+            break;
+        case t_check: 
+            cout << "predict stmt --> check rln" <<endl;
+            match (t_check);
+            rln ();
             break;
         default: error ();
     }
@@ -114,6 +146,48 @@ void expr () {
     }
 }
 
+void expr_tail () {
+    switch (input_token) {
+        case t_eql:
+        case t_neql:
+        case t_less:
+        case t_more:
+        case t_leql:
+        case t_meql:
+            cout << "predict expr_tail --> rln_op expr" << endl;
+            rln_op ();
+            expr ();
+            break;
+        case t_rparen:
+        case t_id:
+        case t_read:
+        case t_write:
+        case t_if:
+        case t_do:
+        case t_check:
+        case t_fi:
+        case t_od:
+        case t_eof:
+            cout << "predict expr_tail --> epsilon" << endl;
+            break;          /*  epsilon production */
+        default: error ();
+    }
+
+}
+
+void rln () {
+    switch (input_token) {
+        case t_id:
+        case t_literal:
+        case t_lparen:
+            cout << "predict expr --> expr expr_tail" << endl;
+            expr ();
+            expr_tail ();
+            break;
+        default: error ();
+    }
+}
+
 void term_tail () {
     switch (input_token) {
         case t_add:
@@ -123,10 +197,21 @@ void term_tail () {
             term ();
             term_tail ();
             break;
+        case t_eql:
+        case t_neql:
+        case t_less:
+        case t_more:
+        case t_leql:
+        case t_meql:
         case t_rparen:
         case t_id:
         case t_read:
         case t_write:
+        case t_if:
+        case t_do:
+        case t_check:
+        case t_fi:
+        case t_od:
         case t_eof:
             cout << "predict term_tail --> epsilon" << endl;
             break;          /*  epsilon production */
@@ -158,10 +243,21 @@ void factor_tail () {
             break;
         case t_add:
         case t_sub:
+         case t_eql:
+        case t_neql:
+        case t_less:
+        case t_more:
+        case t_leql:
+        case t_meql:
         case t_rparen:
         case t_id:
         case t_read:
         case t_write:
+        case t_if:
+        case t_do:
+        case t_check:
+        case t_fi:
+        case t_od:
         case t_eof:
             cout << "predict factor_tail --> epsilon" << endl;
             break;          /*  epsilon production */
@@ -182,7 +278,7 @@ void factor () {
         case t_lparen:
             cout << "predict factor --> lparen expr rparen"  << endl;
             match (t_lparen);
-            expr ();
+            rln ();
             match (t_rparen);
             break;
         default: error ();
@@ -216,6 +312,36 @@ void mul_op () {
         default: error ();
     }
 }
+
+void rln_op () {
+    switch (input_token) {
+        case t_eql:
+            cout << "predict rln_op --> eql" << endl;
+            match (t_eql);
+            break;
+        case t_neql:
+            cout << "predict rln_op --> neql" << endl;
+            match (t_neql);
+            break;
+        case t_less:
+            cout << "predict rln_op --> t_less" << endl;
+            match (t_less);
+            break;
+        case t_more:
+            cout << "predict rln_op --> t_more" <<endl;
+            match (t_more);
+            break;
+        case t_leql:
+            cout << "predict rln_op --> leql" << endl;
+            match (t_leql);  
+        case t_meql:
+            cout << "predict rln_op --> meql" << endl;
+            match (t_meql);
+            break;
+        default: error ();
+    }
+}
+
 
 int main () {
     input_token = scan ();

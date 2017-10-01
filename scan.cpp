@@ -33,6 +33,11 @@ token scan() {
         token_image[i] = '\0';
         if (!strcmp(token_image, "read")) return t_read;
         else if (!strcmp(token_image, "write")) return t_write;
+        else if (!strcmp(token_image, "if")) return t_if;
+        else if (!strcmp(token_image, "fi")) return t_fi;
+        else if (!strcmp(token_image, "do")) return t_do;
+        else if (!strcmp(token_image, "od")) return t_od;
+        else if (!strcmp(token_image, "check")) return t_check;
         else return t_id;
     }
     else if (isdigit(c)) {
@@ -60,6 +65,35 @@ token scan() {
         case '/': c = cin.get(); return t_div;
         case '(': c = cin.get(); return t_lparen;
         case ')': c = cin.get(); return t_rparen;
+
+        case '=': 
+            if ((c = cin.get()) != '=') {
+                cerr << "error" << endl;
+                exit(1);
+            } else {
+                c = cin.get();
+                return t_eql;
+            }
+            break;
+        case '<': 
+            if ((c = cin.get()) == '=') {
+                c = cin.get();
+                return t_leql;
+            } else if (c == '>') {
+                c = cin.get();
+                return t_neql; 
+            } else {
+                return t_less;
+            }
+            break;
+        case '>':
+            if ((c = cin.get()) == '=') {
+                c = cin.get();
+                return t_meql;
+            } else {
+                return t_more;
+            }
+            break;
         default:
             //printf("error\n");
             cout << "error" << endl;
